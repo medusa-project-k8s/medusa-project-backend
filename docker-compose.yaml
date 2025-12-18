@@ -37,17 +37,13 @@ services:
       - redis
     ports:
       - "9000:9000"
+      - "5173:5173"
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/medusa-store
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=supersecret
-      - COOKIE_SECRET=supersecret
-      - STORE_CORS=http://localhost:8000
-      - ADMIN_CORS=http://localhost:9000,http://localhost:7001
-      - AUTH_CORS=http://localhost:9000,http://localhost:7001
-    # env_file:
-    #   - .env
+    env_file:
+      - .env
     volumes:
       - .:/server
       - /server/node_modules
