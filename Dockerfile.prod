@@ -1,0 +1,65 @@
+# Production Dockerfile for Medusa v2
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /server
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine
+
+# Install netcat for health checks
+RUN apk add --no-cache netcat-openbsd
+
+# Set working directory
+WORKDIR /server
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder
+COPY --from=builder /server/dist ./dist
+COPY --from=builder /server/node_modules/.prisma ./node_modules/.prisma 2>/dev/null || true
+COPY --from=builder /server/.medusa ./.medusa 2>/dev/null || true
+
+# Copy necessary files
+COPY medusa-config.ts ./
+COPY start.sh ./
+
+# Make start script executable
+RUN chmod +x ./start.sh
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S medusa -u 1001
+
+# Change ownership
+RUN chown -R medusa:nodejs /server
+
+USER medusa
+
+# Expose the port Medusa runs on
+EXPOSE 9000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD nc -z localhost 9000 || exit 1
+
+# Start the production server
+CMD ["./start.sh"]
+
+
