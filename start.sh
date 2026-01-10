@@ -2,8 +2,22 @@
 set -e
 
 # Wait for postgres to be ready
-echo "Waiting for database to be ready..."
-until nc -z postgres 5432; do
+# Use DB_HOST/DB_PORT env vars, or parse from DATABASE_URL
+if [ -z "$DB_HOST" ] && [ -n "$DATABASE_URL" ]; then
+  # Parse host from DATABASE_URL: postgres://user:pass@host:port/db
+  DB_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:]*\):.*|\1|p')
+fi
+
+if [ -z "$DB_PORT" ] && [ -n "$DATABASE_URL" ]; then
+  # Parse port from DATABASE_URL
+  DB_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*@[^:]*:\([0-9]*\)/.*|\1|p')
+fi
+
+DB_HOST=${DB_HOST:-localhost}
+DB_PORT=${DB_PORT:-5432}
+
+echo "Waiting for database to be ready at ${DB_HOST}:${DB_PORT}..."
+until nc -z ${DB_HOST} ${DB_PORT}; do
   echo "Waiting for postgres..."
   sleep 2
 done
