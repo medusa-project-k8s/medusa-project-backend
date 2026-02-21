@@ -13,8 +13,7 @@ package-lock.json.backup
 README.md
 *.md
 
-# Environment files (do not bake into image; use K8s/container env in production)
-.env
+# Environment files
 .env.test
 .env.local
 .env.*.local
