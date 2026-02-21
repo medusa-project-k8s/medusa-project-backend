@@ -16,12 +16,7 @@ module.exports = defineConfig({
       ssl: false,
       sslmode: "disable",
     },
-  }
-})
-
-
-module.exports = defineConfig({
-  // ...
+  },
   admin: {
     vite: (config) => {
       return {
@@ -29,8 +24,6 @@ module.exports = defineConfig({
         server: {
           ...config.server,
           host: "0.0.0.0",
-          // Allow all hosts when running in Docker (development mode)
-          // In production, this should be more restrictive
           allowedHosts: [
             "localhost",
             ".localhost",
@@ -38,9 +31,7 @@ module.exports = defineConfig({
           ],
           hmr: {
             ...config.server?.hmr,
-            // HMR websocket port inside container
-            port: 5173, 
-            // Port browser connects to (exposed in docker-compose.yml)
+            port: 5173,
             clientPort: 5173,
           },
         },
