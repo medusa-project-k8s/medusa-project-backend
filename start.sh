@@ -14,6 +14,10 @@ echo "Database is ready!"
 echo "Building Medusa project..."
 npm run build
 
+# medusa start looks for admin at ./public; symlink so it finds .medusa/server/public (see medusajs/medusa#10147)
+rm -rf public
+ln -s .medusa/server/public public
+
 # Run database migrations
 echo "Running database migrations..."
 npx medusa db:migrate || echo "Migrations completed or already run"
