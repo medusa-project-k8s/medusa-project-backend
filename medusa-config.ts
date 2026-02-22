@@ -18,6 +18,11 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     },
+    // So session cookie works over http:// (e.g. port-forward to localhost). Set COOKIE_SECURE=true when behind HTTPS.
+    cookieOptions: {
+      sameSite: "lax",
+      secure: process.env.COOKIE_SECURE === "true",
+    },
     databaseDriverOptions: {
       ssl: false,
       sslmode: "disable",
