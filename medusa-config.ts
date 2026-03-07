@@ -8,6 +8,11 @@ if (!databaseUrl) {
   console.error('[medusa-config] DATABASE_URL is not set. Set it in the container environment (e.g. K8s Secret).')
 }
 
+// Public URL where the backend is reachable (browser). Used for image/file URLs returned by the API.
+// Medusa local file provider serves under /static, so URLs are backend_url + path (e.g. .../static/...).
+const backendPublicUrl = process.env.BACKEND_PUBLIC_URL || "http://localhost:9000"
+const backendFileUrl = backendPublicUrl.replace(/\/$/, "") + "/static"
+
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl,
@@ -36,11 +41,8 @@ module.exports = defineConfig({
         server: {
           ...config.server,
           host: "0.0.0.0",
-          allowedHosts: [
-            "localhost",
-            ".localhost",
-            "127.0.0.1",
-          ],
+          // Allow access via ingress IP (e.g. 192.168.0.160) and localhost
+          allowedHosts: true,
           hmr: {
             ...config.server?.hmr,
             port: 5173,
@@ -50,4 +52,21 @@ module.exports = defineConfig({
       }
     },
   },
+  // So image/file URLs returned by the API use the public URL (e.g. http://192.168.0.160) instead of localhost
+  modules: [
+    {
+      resolve: "@medusajs/medusa/file",
+      options: {
+        providers: [
+          {
+            resolve: "@medusajs/medusa/file-local",
+            id: "local",
+            options: {
+              backend_url: backendFileUrl,
+            },
+          },
+        ],
+      },
+    },
+  ],
 })
